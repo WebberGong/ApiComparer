@@ -1,0 +1,766 @@
+﻿<Window x:Class="ApiComparer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:uc="clr-namespace:ApiComparer.UserControl"
+        xmlns:dataTemplateSelector="clr-namespace:ApiComparer.DataTemplateSelector"
+        mc:Ignorable="d" FontSize="13" Background="LightBlue" WindowStartupLocation="CenterScreen"
+        DataContext="{Binding Main, Source={StaticResource Locator}}" Icon="{Binding Icon}"
+        Title="API对比工具" Height="800" Width="1200" MinHeight="800" MinWidth="1200">
+    <Window.Resources>
+        <Color x:Key="ForegroundColor">#FFDDDDDD</Color>
+        <SolidColorBrush x:Key="ForegroundBrush" Color="{StaticResource ForegroundColor}" />
+        <Style x:Key="ProgressBar" TargetType="ProgressBar">
+            <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DefaultedBorderBrush}" />
+            <Setter Property="BorderThickness" Value="0 1 0 0" />
+            <Setter Property="Margin" Value="0 -1 0 0" />
+        </Style>
+        <Style x:Key="StatusItemName" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
+            <Setter Property="Margin" Value="5 0 0 0" />
+        </Style>
+        <Style x:Key="StatusItemValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="Red" />
+            <Setter Property="Margin" Value="5 0 0 0" />
+        </Style>
+        <SolidColorBrush x:Key="ForegroundNormalKey" Color="Green" />
+        <SolidColorBrush x:Key="ForegroundApiNotFoundKey" Color="DimGray" />
+        <SolidColorBrush x:Key="ForegroundValueUnequalKey" Color="OrangeRed" />
+        <SolidColorBrush x:Key="ForegroundValueTypeNotMatchedKey" Color="DodgerBlue" />
+        <SolidColorBrush x:Key="ForegroundPropertyMissingKey" Color="Yellow" />
+        <SolidColorBrush x:Key="ForegroundNormalValue" Color="Green" />
+        <SolidColorBrush x:Key="ForegroundApiNotFoundValue" Color="DimGray" />
+        <SolidColorBrush x:Key="ForegroundValueUnequalValue" Color="OrangeRed" />
+        <SolidColorBrush x:Key="ForegroundValueTypeNotMatchedValue" Color="DodgerBlue" />
+        <SolidColorBrush x:Key="ForegroundPropertyMissingValue" Color="Yellow" />
+        <SolidColorBrush x:Key="BackgroundNormalTag" Color="DarkSeaGreen" />
+        <SolidColorBrush x:Key="BackgroundApiNotFoundTag" Color="White" />
+        <SolidColorBrush x:Key="BackgroundValueUnequalTag" Color="LightCoral" />
+        <SolidColorBrush x:Key="BackgroundValueTypeNotMatchedTag" Color="LightSkyBlue" />
+        <SolidColorBrush x:Key="BackgroundPropertyMissingTag" Color="Yellow" />
+        <Style x:Key="HeaderName" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="DeepPink" />
+        </Style>
+        <Style x:Key="ItemNameBase" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="5 2 0 2" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style x:Key="ItemValueBase" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}" />
+            <Setter Property="Background" Value="{StaticResource NormalBrush}" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="5 2 0 2" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="IsHitTestVisible" Value="True" />
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="Red" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ItemName" TargetType="TextBlock" BasedOn="{StaticResource ItemNameBase}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="Normal">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalKey}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueEqual">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalKey}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueTypeMatched">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalKey}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="PropertyExisted">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalKey}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueUnequal">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundValueUnequalKey}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueTypeNotMatched">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundValueTypeNotMatchedKey}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="PropertyMissing">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundPropertyMissingKey}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ItemValue" TargetType="TextBox" BasedOn="{StaticResource ItemValueBase}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.Value}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="Normal">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalValue}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueEqual">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalValue}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueTypeMatched">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalValue}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="PropertyExisted">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundNormalValue}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueUnequal">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundValueUnequalValue}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="ValueTypeNotMatched">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundValueTypeNotMatchedValue}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=DataContext.State}"
+                             Value="PropertyMissing">
+                    <Setter Property="Foreground" Value="{StaticResource ForegroundPropertyMissingValue}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}" />
+        <Style TargetType="ListBoxItem">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Padding" Value="2"></Setter>
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style x:Key="Expander" TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+            <Setter Property="IsExpanded" Value="True" />
+            <Setter Property="Margin" Value="10 0 0 0" />
+        </Style>
+        <Style x:Key="StateBlockBorder" TargetType="Border">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="5 0" />
+            <Setter Property="Margin" Value="5 0 0 0" />
+        </Style>
+        <DataTemplate x:Key="StateNodeValueTemplate">
+            <TreeView x:Name="JsonTree" ItemsSource="{Binding Value.ChildNodes, Mode=TwoWay}"
+                      PreviewMouseWheel="JsonTree_OnPreviewMouseWheel" IsHitTestVisible="True">
+                <TreeView.Style>
+                    <Style TargetType="TreeView" BasedOn="{StaticResource {x:Type TreeView}}" />
+                </TreeView.Style>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="IsExpanded" Value="True" />
+                    </Style>
+                </TreeView.ItemContainerStyle>
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding ChildNodes, Mode=TwoWay}">
+                        <Grid DataContext="{Binding Value}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Key}" Style="{StaticResource ItemName}" />
+                            <TextBlock Grid.Column="1" Text=":" Style="{StaticResource ItemName}" />
+                            <TextBox Grid.Column="2" Text="{Binding Value}" Style="{StaticResource ItemValue}" />
+                        </Grid>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </DataTemplate>
+        <DataTemplate x:Key="TextValueTemplate">
+            <TextBox Text="{Binding Value}" Style="{StaticResource ItemValue}" />
+        </DataTemplate>
+        <dataTemplateSelector:ValueDataTemplateSelector x:Key="ValueDataTemplateSelector"
+                                                        TextValueTemplate="{StaticResource TextValueTemplate}"
+                                                        StateNodeValueTemplate="{StaticResource StateNodeValueTemplate}" />
+        <ControlTemplate x:Key="Normal">
+            <Border Background="{StaticResource BackgroundNormalTag}">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StateBlockBorder}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsNormal}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="Normal" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Black" />
+            </Border>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ApiNotFound">
+            <Border Background="{StaticResource BackgroundApiNotFoundTag}">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StateBlockBorder}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasApiNotFoundState}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="ApiNotFound" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource ForegroundApiNotFoundValue}" />
+            </Border>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ValueUnequal">
+            <Border Background="{StaticResource BackgroundValueUnequalTag}">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StateBlockBorder}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasValueUnequalState}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="ValueUnequal" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="Black" />
+            </Border>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ValueTypeNotMatched">
+            <Border Background="{StaticResource BackgroundValueTypeNotMatchedTag}">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StateBlockBorder}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasValueTypeNotMatched}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="ValueTypeNotMatched" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="Black" />
+            </Border>
+        </ControlTemplate>
+        <ControlTemplate x:Key="PropertyMissing">
+            <Border Background="{StaticResource BackgroundPropertyMissingTag}">
+                <Border.Style>
+                    <Style TargetType="Border" BasedOn="{StaticResource StateBlockBorder}">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasPropertyMissingState}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="PropertyMissing" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="Black" />
+            </Border>
+        </ControlTemplate>
+        <DataTemplate x:Key="StateTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ContentControl Grid.Column="0" Template="{StaticResource Normal}" DataContext="{Binding .}" />
+                <ContentControl Grid.Column="1" Template="{StaticResource ApiNotFound}" DataContext="{Binding .}" />
+                <ContentControl Grid.Column="2" Template="{StaticResource ValueUnequal}" DataContext="{Binding .}" />
+                <ContentControl Grid.Column="3" Template="{StaticResource ValueTypeNotMatched}"
+                                DataContext="{Binding .}" />
+                <ContentControl Grid.Column="4" Template="{StaticResource PropertyMissing}" DataContext="{Binding .}" />
+            </Grid>
+        </DataTemplate>
+        <ControlTemplate x:Key="RequestAddressTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <TextBlock Text="Address" Style="{StaticResource HeaderName}" />
+                </Expander.Header>
+                <Expander.Content>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Method" Style="{StaticResource ItemNameBase}"
+                                   HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                        <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding Method}"
+                                   Style="{StaticResource ItemValueBase}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Url" Style="{StaticResource ItemNameBase}"
+                                   HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                        <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding Url}"
+                                   Style="{StaticResource ItemValueBase}" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Type" Style="{StaticResource ItemNameBase}"
+                                   HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                        <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Type}"
+                                   Style="{StaticResource ItemValueBase}" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Protocol" Style="{StaticResource ItemNameBase}"
+                                   HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                        <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding Protocol}"
+                                   Style="{StaticResource ItemValueBase}" />
+                    </Grid>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="HeaderTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Header" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <ItemsControl ItemsSource="{Binding Content}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding Value}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Key}" Style="{StaticResource ItemName}" />
+                                    <TextBlock Grid.Column="1" Text=":" Style="{StaticResource ItemName}" />
+                                    <TextBox Grid.Column="2" Text="{Binding Value}"
+                                               Style="{StaticResource ItemValue}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="CookieTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Cookie" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <ItemsControl ItemsSource="{Binding Content}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding Value}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Key}" Style="{StaticResource ItemName}" />
+                                    <TextBlock Grid.Column="1" Text=":" Style="{StaticResource ItemName}" />
+                                    <TextBox Grid.Column="2" Text="{Binding Value}"
+                                               Style="{StaticResource ItemValue}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="RequestBodyTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Body" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <ItemsControl ItemsSource="{Binding Content}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid DataContext="{Binding Value}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Key}" Style="{StaticResource ItemName}" />
+                                    <TextBlock Grid.Column="1" Text=":" Style="{StaticResource ItemName}" />
+                                    <ContentControl Grid.Column="2"
+                                                    ContentTemplateSelector="{StaticResource ValueDataTemplateSelector}"
+                                                    Content="{Binding .}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ResponseStatusTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Status" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" DataContext="{Binding Protocol}" Text="Protocol"
+                                   Style="{StaticResource ItemName}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" DataContext="{Binding Protocol}" Text=":"
+                                   Style="{StaticResource ItemName}" />
+                        <TextBox Grid.Row="0" Grid.Column="2" DataContext="{Binding Protocol}" Text="{Binding Value}"
+                                   Style="{StaticResource ItemValue}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" DataContext="{Binding Code}" Text="Code"
+                                   Style="{StaticResource ItemName}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" DataContext="{Binding Code}" Text=":"
+                                   Style="{StaticResource ItemName}" />
+                        <TextBox Grid.Row="1" Grid.Column="2" DataContext="{Binding Code}" Text="{Binding Value}"
+                                   Style="{StaticResource ItemValue}" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" DataContext="{Binding Text}" Text="Text"
+                                   Style="{StaticResource ItemName}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" DataContext="{Binding Text}" Text=":"
+                                   Style="{StaticResource ItemName}" />
+                        <TextBox Grid.Row="2" Grid.Column="2" DataContext="{Binding Text}" Text="{Binding Value}"
+                                   Style="{StaticResource ItemValue}" />
+                    </Grid>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ResponseBodyTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Body" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <ContentControl DataContext="{Binding Content}"
+                                    ContentTemplateSelector="{StaticResource ValueDataTemplateSelector}"
+                                    Content="{Binding .}" />
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="RequestTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Request" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Grid.Row="0" DataContext="{Binding Address}"
+                                        Template="{StaticResource RequestAddressTemplate}" />
+                        <ContentControl Grid.Row="1" DataContext="{Binding Header}"
+                                        Template="{StaticResource HeaderTemplate}" />
+                        <ContentControl Grid.Row="2" DataContext="{Binding Cookie}"
+                                        Template="{StaticResource CookieTemplate}" />
+                        <ContentControl Grid.Row="3" DataContext="{Binding Body}"
+                                        Template="{StaticResource RequestBodyTemplate}" />
+                    </Grid>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ResponseTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Response" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ContentControl Grid.Row="0" DataContext="{Binding Status}"
+                                        Template="{StaticResource ResponseStatusTemplate}" />
+                        <ContentControl Grid.Row="1" DataContext="{Binding Header}"
+                                        Template="{StaticResource HeaderTemplate}" />
+                        <ContentControl Grid.Row="2" DataContext="{Binding Body}"
+                                        Template="{StaticResource ResponseBodyTemplate}" />
+                    </Grid>
+                </Expander.Content>
+            </Expander>
+        </ControlTemplate>
+        <DataTemplate x:Key="ApiTemplate">
+            <Expander ExpandDirection="Down" Style="{StaticResource Expander}" IsExpanded="False">
+                <Expander.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Api" Style="{StaticResource HeaderName}" />
+                        <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                        Content="{Binding .}" />
+                    </Grid>
+                </Expander.Header>
+                <Expander.Content>
+                    <TabControl>
+                        <TabItem Header="解析文本">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ContentControl Grid.Row="0" DataContext="{Binding Request}"
+                                                Template="{StaticResource RequestTemplate}" />
+                                <ContentControl Grid.Row="1" DataContext="{Binding Response}"
+                                                Template="{StaticResource ResponseTemplate}" />
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="原始文本">
+                            <TextBox Text="{Binding OriginalText}" Background="{StaticResource ShadeBrush}"
+                                        IsReadOnly="True" Foreground="Green" Padding="5" />
+                        </TabItem>
+                    </TabControl>
+                </Expander.Content>
+            </Expander>
+        </DataTemplate>
+        <DataTemplate x:Key="ApiProfileTemplate">
+            <Border Padding="5">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="BorderThickness" Value="2" />
+                        <Setter Property="BorderBrush" Value="{StaticResource DefaultedBorderBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem, Mode=FindAncestor}}" Value="True">
+                                <Setter Property="BorderThickness" Value="4" />
+                                <Setter Property="BorderBrush" Value="Yellow" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid Width="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ActualWidth, 
+                    Converter={StaticResource OutterWidthConverter}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Method" Style="{StaticResource ItemNameBase}"
+                           HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                    <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding Key.Method}"
+                           Style="{StaticResource ItemValueBase}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Group" Style="{StaticResource ItemNameBase}"
+                           HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                    <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding Key.Group}"
+                           Style="{StaticResource ItemValueBase}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Api Count" Style="{StaticResource ItemNameBase}"
+                           HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text=":" Style="{StaticResource ItemNameBase}" />
+                    <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Value.Content.Count, Mode=OneWay}"
+                           Style="{StaticResource ItemValueBase}" />
+                    <Expander Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" ExpandDirection="Down" IsExpanded="False">
+                        <Expander.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="View Details" Style="{StaticResource HeaderName}" />
+                                <ContentControl Grid.Column="1" ContentTemplate="{StaticResource StateTemplate}"
+                                            Content="{Binding Value}" />
+                            </Grid>
+                        </Expander.Header>
+                        <Expander.Content>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                      MaxHeight="500">
+                                <ItemsControl ItemsSource="{Binding Value.Content}"
+                                          ItemTemplate="{StaticResource ApiTemplate}"
+                                          Width="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=ActualWidth, 
+                                                Converter={StaticResource InnerWidthConverter}}" />
+                            </ScrollViewer>
+                        </Expander.Content>
+                    </Expander>
+                </Grid>
+            </Border>
+        </DataTemplate>
+        <ControlTemplate x:Key="ParseStatusTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ProgressBar Grid.Column="0" Grid.ColumnSpan="4" Value="{Binding RateOfProgress}" Minimum="0"
+                             Maximum="100" Style="{StaticResource ProgressBar}" />
+                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                           HorizontalAlignment="Left" Margin="10 0 10 0">
+                    <TextBlock Style="{StaticResource StatusItemName}" Text="API总数：" />
+                    <TextBlock Style="{StaticResource StatusItemValue}" Text="{Binding TotalApiCount}" />
+                </WrapPanel>
+                <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                           HorizontalAlignment="Left" Margin="10 0 10 0">
+                    <TextBlock Style="{StaticResource StatusItemName}" Text="已解析API数：" />
+                    <TextBlock Style="{StaticResource StatusItemValue}" Text="{Binding ParsedApiCount}" />
+                </WrapPanel>
+                <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                           HorizontalAlignment="Left" Margin="10 0 10 0">
+                    <TextBlock Style="{StaticResource StatusItemName}" Text="解析成功API数：" />
+                    <TextBlock Style="{StaticResource StatusItemValue}" Text="{Binding ParsedSuccessApiCount}" />
+                </WrapPanel>
+                <WrapPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center"
+                           HorizontalAlignment="Left" Margin="10 0 10 0">
+                    <TextBlock Style="{StaticResource StatusItemName}" Text="进度：" />
+                    <TextBlock Style="{StaticResource StatusItemValue}" Text="{Binding RateOfProgress}" />
+                    <TextBlock Style="{StaticResource StatusItemValue}" Text="%" />
+                </WrapPanel>
+            </Grid>
+        </ControlTemplate>
+    </Window.Resources>
+    <Grid Margin="4 2 4 2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <uc:SelectFile Grid.Column="0" FilePath="{Binding FilePath1, Mode=TwoWay}" Width="300" Height="30"
+                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5 0 0 0" />
+            <uc:SelectFile Grid.Column="1" FilePath="{Binding FilePath2, Mode=TwoWay}" Width="300" Height="30"
+                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20 0 0 0" />
+            <Button Grid.Column="2" Content="开始执行" Command="{Binding RunCommand, Mode=OneTime}" Width="100"
+                    Height="30" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20 0 0 0" />
+        </Grid>
+        <Grid Grid.Row="1" Margin="5 0 5 5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="30" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="0" Grid.Column="0" Margin="0 2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="100"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="SearchText1" Grid.Column="0" VerticalContentAlignment="Center" KeyUp="SearchText1_OnKeyUp"></TextBox>
+                <Button x:Name="SearchButton1" Grid.Column="1" Content="查找" Margin="5 0 0 0" Click="SearchButton1_OnClick"></Button>
+            </Grid>
+            <Grid Grid.Row="0" Grid.Column="2" Margin="0 2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="100"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="SearchText2" Grid.Column="0" VerticalContentAlignment="Center" KeyUp="SearchText2_OnKeyUp"></TextBox>
+                <Button x:Name="SearchButton2" Grid.Column="1" Content="查找" Margin="5 0 0 0" Click="SearchButton2_OnClick"></Button>
+            </Grid>
+            <StackPanel Grid.Row="0" Grid.Column="2"></StackPanel>
+            <ListBox x:Name="Api1" Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ApiDictionary1.Content}"
+                     SelectionMode="Single"
+                     ItemTemplate="{StaticResource ApiProfileTemplate}" HorizontalContentAlignment="Stretch"
+                     SelectionChanged="Api1_OnSelectionChanged" />
+            <ListBox x:Name="Api2" Grid.Row="1" Grid.Column="2" ItemsSource="{Binding ApiDictionary2.Content}"
+                     SelectionMode="Single"
+                     ItemTemplate="{StaticResource ApiProfileTemplate}" HorizontalContentAlignment="Stretch"
+                     SelectionChanged="Api2_OnSelectionChanged" />
+            <ContentControl Grid.Row="2" Grid.Column="0" Template="{StaticResource ParseStatusTemplate}"
+                            DataContext="{Binding ParseStatus1}" HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch" />
+            <ContentControl Grid.Row="2" Grid.Column="2" Template="{StaticResource ParseStatusTemplate}"
+                            DataContext="{Binding ParseStatus2}" HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch" />
+        </Grid>
+        <xctk:BusyIndicator Grid.Row="0" Grid.RowSpan="2" IsBusy="{Binding IsBusy}" HorizontalAlignment="Center"
+                            VerticalAlignment="Center" Foreground="CornflowerBlue">
+            <xctk:BusyIndicator.BusyContent>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="正在" Foreground="CornflowerBlue" />
+                    <TextBlock Text="{Binding Step, Mode=TwoWay}" Foreground="CornflowerBlue" />
+                    <TextBlock Text="中..." Foreground="CornflowerBlue" />
+                </StackPanel>
+            </xctk:BusyIndicator.BusyContent>
+        </xctk:BusyIndicator>
+    </Grid>
+</Window>
