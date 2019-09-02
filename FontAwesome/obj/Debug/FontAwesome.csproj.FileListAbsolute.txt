@@ -1,7 +1,8 @@
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\bin\Debug\FontAwesomeWPF.dll
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\bin\Debug\FontAwesomeWPF.pdb
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\bin\Debug\FontAwesome.Sharp.dll
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\obj\Debug\FontAwesome.csprojResolveAssemblyReference.cache
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\obj\Debug\FontAwesomeWPF.g.resources
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\obj\Debug\FontAwesomeWPF.dll
-C:\Users\Webbe\Desktop\ApiComparer\FontAwesome\obj\Debug\FontAwesomeWPF.pdb
+E:\GitHub\ApiComparer\FontAwesome\bin\Debug\FontAwesomeWPF.dll
+E:\GitHub\ApiComparer\FontAwesome\bin\Debug\FontAwesomeWPF.pdb
+E:\GitHub\ApiComparer\FontAwesome\obj\Debug\FontAwesomeWPF.g.resources
+E:\GitHub\ApiComparer\FontAwesome\obj\Debug\FontAwesome.csproj.CoreCompileInputs.cache
+E:\GitHub\ApiComparer\FontAwesome\obj\Debug\FontAwesomeWPF.dll
+E:\GitHub\ApiComparer\FontAwesome\obj\Debug\FontAwesomeWPF.pdb
+E:\GitHub\ApiComparer\FontAwesome\bin\Debug\FontAwesome.Sharp.dll
+E:\GitHub\ApiComparer\FontAwesome\obj\Debug\FontAwesome.csproj.CopyComplete

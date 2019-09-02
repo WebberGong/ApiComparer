@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\Webbe\Desktop\ApiComparer\ApiComparer\obj\Debug\
+E:\GitHub\ApiComparer\ApiComparer\obj\Debug\
 ApiComparer
 none
 false
 DEBUG;TRACE
-C:\Users\Webbe\Desktop\ApiComparer\ApiComparer\App.xaml
+E:\GitHub\ApiComparer\ApiComparer\App.xaml
 3711685445
 11571957685
-35-1814226887
-77-1480071678
+35-159277878
+771100896468
 MainWindow.xaml;Themes\ExpressionDark.xaml;UserControl\SelectFile.xaml;
 
-False
+True
 
